@@ -21,7 +21,7 @@ const MOVE_BACKWARD = -1;
 const MINUS = '-';
 const MINUS_KEY = 'minus';
 const INPUT_EVENT = 'input';
-
+const COMPOSITIONEND_EVENT = 'compositionend';
 const CARET_TIMEOUT_DURATION = 0;
 
 const NumberBoxMask = NumberBoxBase.inherit({
@@ -552,6 +552,13 @@ const NumberBoxMask = NumberBoxBase.inherit({
 
     _attachFormatterEvents: function() {
         const $input = this._input();
+
+        eventsEngine.on($input, addNamespace(INPUT_EVENT, NUMBER_FORMATTER_NAMESPACE), function(e) {
+            if(!e.originalEvent.isComposing) {
+                this._formatValue(e);
+                this._isValuePasted = false;
+            }
+        }.bind(this));
 
         eventsEngine.on($input, addNamespace(INPUT_EVENT, NUMBER_FORMATTER_NAMESPACE), function(e) {
             this._formatValue(e);
