@@ -30,7 +30,7 @@ const MINUS = '-';
 const MINUS_KEY = 'minus';
 const INPUT_EVENT = 'input';
 const NUMPAD_DOT_KEY_CODE = 110;
-
+const COMPOSITIONEND_EVENT = 'compositionend';
 const CARET_TIMEOUT_DURATION = 0;
 
 const NumberBoxMask = NumberBoxBase.inherit({
@@ -433,9 +433,9 @@ const NumberBoxMask = NumberBoxBase.inherit({
 
     const isDecimalPointRestricted = char === decimalSeparator && maxPrecision === 0;
     const isUselessCharRestricted = !isTextSelected
-            && !isValueChanged
-            && char !== MINUS
-            && this._isStub(char);
+      && !isValueChanged
+      && char !== MINUS
+      && this._isStub(char);
 
     if (isDecimalPointRestricted || isUselessCharRestricted) {
       return undefined;
@@ -579,10 +579,17 @@ const NumberBoxMask = NumberBoxBase.inherit({
   _attachFormatterEvents() {
     const $input = this._input();
 
-    eventsEngine.on($input, addNamespace(INPUT_EVENT, NUMBER_FORMATTER_NAMESPACE), (e) => {
+    eventsEngine.on($input, addNamespace(INPUT_EVENT, NUMBER_FORMATTER_NAMESPACE), function (e) {
+      if (!e.originalEvent.isComposing) {
+        this._formatValue(e);
+        this._isValuePasted = false;
+      }
+    }.bind(this));
+
+    eventsEngine.on($input, addNamespace(COMPOSITIONEND_EVENT, NUMBER_FORMATTER_NAMESPACE), function (e) {
       this._formatValue(e);
       this._isValuePasted = false;
-    });
+    }.bind(this));
 
     eventsEngine.on($input, addNamespace('dxclick', NUMBER_FORMATTER_NAMESPACE), () => {
       if (!this._caretTimeout) {
